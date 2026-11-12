@@ -24,6 +24,7 @@ class VideoEngine:
         self.duration_seconds: float = 0.0
         self.current_frame_idx: int = 0
         self.current_pil_frame: Optional[Image.Image] = None
+        self._last_raw_frame = None
 
     def load_video(self, file_path: str) -> Tuple[bool, str]:
         """Opens video file and extracts technical video parameters."""
@@ -56,8 +57,8 @@ class VideoEngine:
 
         return True, f"Loaded {self.width}×{self.height} @ {self.fps:.1f} FPS"
 
-    def read_next_frame(self) -> Optional[Image.Image]:
-        """Reads the next consecutive frame from the video stream."""
+    def read_next_frame(self, target_size: Optional[Tuple[int, int]] = None) -> Optional[Image.Image]:
+        """Reads the next consecutive frame from the video stream with ultra-fast C++ SIMD resizing."""
         if not self.cap or not self.cap.isOpened():
             return None
 
@@ -66,26 +67,39 @@ class VideoEngine:
             return None
 
         self.current_frame_idx = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        self._last_raw_frame = frame  # Cached for full-resolution snapshot extraction
+
+        # Fast C++ SIMD resize prior to RGB conversion if canvas size is smaller than native
+        if target_size and (target_size[0] < self.width or target_size[1] < self.height):
+            frame = cv2.resize(frame, target_size, interpolation=cv2.INTER_LINEAR)
+
         # Convert BGR (OpenCV) to RGB (PIL)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.current_pil_frame = Image.fromarray(rgb_frame)
         return self.current_pil_frame
 
-    def seek_to_frame(self, frame_idx: int) -> Optional[Image.Image]:
+    def get_full_res_frame(self) -> Optional[Image.Image]:
+        """Returns the active frame at native 4K/1080p camera resolution for snapshot saving & studio editing."""
+        if self._last_raw_frame is not None:
+            rgb = cv2.cvtColor(self._last_raw_frame, cv2.COLOR_BGR2RGB)
+            return Image.fromarray(rgb)
+        return self.current_pil_frame
+
+    def seek_to_frame(self, frame_idx: int, target_size: Optional[Tuple[int, int]] = None) -> Optional[Image.Image]:
         """Jumps directly to a specific frame number."""
         if not self.cap or not self.cap.isOpened():
             return None
 
         target = max(0, min(self.total_frames - 1, frame_idx))
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, target)
-        return self.read_next_frame()
+        return self.read_next_frame(target_size=target_size)
 
-    def seek_to_ratio(self, ratio: float) -> Optional[Image.Image]:
+    def seek_to_ratio(self, ratio: float, target_size: Optional[Tuple[int, int]] = None) -> Optional[Image.Image]:
         """Jumps to normalized position (0.0 to 1.0)."""
         if self.total_frames <= 0:
             return None
         target_frame = int(round(max(0.0, min(1.0, ratio)) * (self.total_frames - 1)))
-        return self.seek_to_frame(target_frame)
+        return self.seek_to_frame(target_frame, target_size=target_size)
 
     @property
     def current_time_seconds(self) -> float:
@@ -138,5 +152,6 @@ class VideoEngine:
             self.cap = None
         self.file_path = None
         self.current_pil_frame = None
+        self._last_raw_frame = None
         self.total_frames = 0
 

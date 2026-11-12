@@ -5,7 +5,9 @@ and 1-click snapshot frame extraction to the photo editor.
 """
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
+import os
+import time
 from PIL import Image, ImageTk
 import customtkinter as ctk
 
@@ -24,7 +26,11 @@ class VideoPlayerView(ctk.CTkFrame):
         self.is_scrubbing = False
 
         self.current_tk_img: Optional[ImageTk.PhotoImage] = None
+        self._canvas_img_id = None
         self._timer_id = None
+        self._play_start_wall = 0.0
+        self._play_start_frame = 0
+        self._last_ui_update_time = 0.0
 
         self._build_ui()
 
@@ -185,10 +191,26 @@ class VideoPlayerView(ctk.CTkFrame):
         self._render_current_frame()
         return True, msg
 
-    def _render_current_frame(self):
-        """Draws the active video frame on the canvas preserving aspect ratio."""
-        self.canvas.delete("all")
-        frame = self.engine.current_pil_frame
+    def _get_canvas_display_size(self) -> Tuple[int, int]:
+        """Calculates fitted dimensions for current viewport."""
+        cw = self.canvas.winfo_width()
+        ch = self.canvas.winfo_height()
+        if cw <= 10 or ch <= 10 or self.engine.width <= 0 or self.engine.height <= 0:
+            return (0, 0)
+        scale = min((cw - 10) / self.engine.width, (ch - 10) / self.engine.height)
+        disp_w = max(1, int(self.engine.width * scale))
+        disp_h = max(1, int(self.engine.height * scale))
+        return (disp_w, disp_h)
+
+    def _render_current_frame(self, frame: Optional[Image.Image] = None):
+        """Draws the active video frame on the canvas with zero lag and persistent canvas image reuse."""
+        if frame is None:
+            disp_size = self._get_canvas_display_size()
+            if disp_size[0] > 0:
+                frame = self.engine.seek_to_frame(self.engine.current_frame_idx, target_size=disp_size)
+            else:
+                frame = self.engine.current_pil_frame
+
         if not frame:
             return
 
@@ -197,18 +219,22 @@ class VideoPlayerView(ctk.CTkFrame):
         if cw <= 10 or ch <= 10:
             return
 
+        disp_w, disp_h = self._get_canvas_display_size()
         img_w, img_h = frame.size
-        scale = min((cw - 20) / img_w, (ch - 20) / img_h)
-        disp_w = max(1, int(img_w * scale))
-        disp_h = max(1, int(img_h * scale))
 
-        resized = frame.resize((disp_w, disp_h), Image.Resampling.BILINEAR)
-        self.current_tk_img = ImageTk.PhotoImage(resized)
+        # In case frame was not already scaled by OpenCV, scale it cleanly
+        if disp_w > 0 and (img_w != disp_w or img_h != disp_h):
+            frame = frame.resize((disp_w, disp_h), Image.Resampling.BILINEAR)
 
-        pos_x = (cw - disp_w) // 2
-        pos_y = (ch - disp_h) // 2
+        self.current_tk_img = ImageTk.PhotoImage(frame)
+        pos_x = (cw - frame.width) // 2
+        pos_y = (ch - frame.height) // 2
 
-        self.canvas.create_image(pos_x, pos_y, anchor=tk.NW, image=self.current_tk_img)
+        if self._canvas_img_id is None:
+            self._canvas_img_id = self.canvas.create_image(pos_x, pos_y, anchor=tk.NW, image=self.current_tk_img)
+        else:
+            self.canvas.coords(self._canvas_img_id, pos_x, pos_y)
+            self.canvas.itemconfig(self._canvas_img_id, image=self.current_tk_img)
 
     def _on_canvas_resize(self, event):
         self._render_current_frame()
@@ -223,6 +249,9 @@ class VideoPlayerView(ctk.CTkFrame):
         if not self.engine.cap or not self.engine.cap.isOpened():
             return
         self.is_playing = True
+        self._play_start_wall = time.perf_counter()
+        self._play_start_frame = self.engine.current_frame_idx
+        self._last_ui_update_time = 0.0
         self.btn_play.configure(text="⏸ Pause", fg_color="#e11d48", hover_color="#be123c")
         self._schedule_next_frame()
 
@@ -236,31 +265,55 @@ class VideoPlayerView(ctk.CTkFrame):
     def stop(self):
         self.pause()
         self.engine.close()
+        self._canvas_img_id = None
+        self.canvas.delete("all")
 
     def _schedule_next_frame(self):
+        """Silky-smooth Presentation Time Stamp (PTS) synchronized frame scheduler."""
         if not self.is_playing:
             return
 
-        frame = self.engine.read_next_frame()
+        disp_size = self._get_canvas_display_size()
+        target_size = disp_size if disp_size[0] > 0 else None
+
+        # Calculate expected playback frame based on wall-clock time
+        elapsed_wall = time.perf_counter() - self._play_start_wall
+        expected_frame = self._play_start_frame + int(elapsed_wall * self.engine.fps * self.speed_factor)
+
+        # Frame drop compensation: if decoding fell behind by 2+ frames, skip decoding
+        lag = expected_frame - self.engine.current_frame_idx
+        if lag > 2 and self.engine.cap:
+            for _ in range(min(lag - 1, 4)):
+                self.engine.cap.grab()
+
+        frame = self.engine.read_next_frame(target_size=target_size)
         if frame is None:
             # End of video reached
             if self.loop:
-                self.engine.seek_to_frame(0)
+                self.engine.seek_to_frame(0, target_size=target_size)
+                self._play_start_wall = time.perf_counter()
+                self._play_start_frame = 0
                 self._render_current_frame()
             else:
                 self.pause()
                 return
         else:
-            self._render_current_frame()
+            self._render_current_frame(frame)
 
-        # Update time indicators
-        if not self.is_scrubbing and self.engine.total_frames > 0:
-            ratio = self.engine.current_frame_idx / self.engine.total_frames
-            self.scrub_slider.set(ratio)
-            self.time_lbl_curr.configure(text=self.engine.formatted_current_time)
+        # Throttled UI slider & timestamp update (every 200ms instead of 60fps)
+        now = time.perf_counter()
+        if not self.is_scrubbing and (now - self._last_ui_update_time >= 0.2):
+            self._last_ui_update_time = now
+            if self.engine.total_frames > 0:
+                ratio = self.engine.current_frame_idx / self.engine.total_frames
+                self.scrub_slider.set(ratio)
+                self.time_lbl_curr.configure(text=self.engine.formatted_current_time)
 
-        # Interval calculation based on FPS and speed multiplier
-        delay_ms = int(max(5, (1000.0 / (self.engine.fps * self.speed_factor))))
+        # Calculate exact millisecond delay for next frame
+        next_frame_target_time = (self.engine.current_frame_idx + 1 - self._play_start_frame) / (self.engine.fps * self.speed_factor)
+        delay_sec = next_frame_target_time - (time.perf_counter() - self._play_start_wall)
+        delay_ms = max(1, min(100, int(delay_sec * 1000)))
+
         self._timer_id = self.after(delay_ms, self._schedule_next_frame)
 
     def _on_scrub(self, val):
@@ -292,22 +345,22 @@ class VideoPlayerView(ctk.CTkFrame):
             self.speed_factor = 1.0
 
     def _handle_save_frame(self):
-        frame = self.engine.current_pil_frame
+        frame = self.engine.get_full_res_frame() or self.engine.current_pil_frame
         if not frame:
             messagebox.showinfo("No Frame", "No active video frame available.")
             return
 
         out_path = filedialog.asksaveasfilename(
-            title="Save Video Snapshot Frame",
+            title="Save Video Snapshot Frame (Full Camera Resolution)",
             initialfile="video_frame.png",
             filetypes=[("PNG Image", "*.png"), ("JPEG Photo", "*.jpg")]
         )
         if out_path:
             frame.save(out_path)
-            messagebox.showinfo("Frame Saved", f"Saved video frame snapshot to:\n{out_path}")
+            messagebox.showinfo("Frame Saved", f"Saved full-resolution video frame ({frame.width}×{frame.height}) to:\n{out_path}")
 
     def _handle_edit_frame(self):
-        frame = self.engine.current_pil_frame
+        frame = self.engine.get_full_res_frame() or self.engine.current_pil_frame
         if not frame:
             messagebox.showinfo("No Frame", "No active video frame available.")
             return
