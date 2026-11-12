@@ -1,0 +1,46 @@
+========================================================================
+   GALLERY CUBE — PRIVACY POLICY
+   Publisher: rmscube
+   Effective Date: 2026-11-11
+========================================================================
+
+1. OVERVIEW & COMMITMENT
+   rmscube ("we", "us", or "our") develops Gallery Cube ("the Application")
+   with a strict Privacy-First, Zero-Data-Collection architectural design.
+   This policy explains our data protection practices under:
+   - The Digital Personal Data Protection Act, 2023 (India)
+   - The Information Technology Act, 2000 and SPDI Rules (India)
+   - The General Data Protection Regulation (EU GDPR)
+   - The California Consumer Privacy Act / CPRA (United States)
+   - International Personal Data Protection frameworks
+
+2. ZERO DATA COLLECTION
+   - The Application is a 100% offline desktop application.
+   - We do NOT collect, store, transmit, process, or sell any personal data.
+   - We do NOT collect telemetry, analytics, device identifiers, or crash logs.
+   - We do NOT track what photos or videos you open, view, edit, or save.
+
+3. LOCAL PROCESSING OF MEDIA & EXIF DATA
+   - All image and video processing, rendering, editing, and conversion takes
+     place entirely on your local computer's processor and memory.
+   - Any camera parameters, EXIF tags, or GPS coordinates embedded in your
+     photos remain strictly within your local environment.
+   - Gallery Cube never uploads your media files to any cloud server or remote
+     infrastructure.
+
+4. NETWORK ACCESS
+   - The Application does not contain hidden background network connections
+     or phone-home mechanisms.
+   - The only optional network action occurs if you explicitly click
+     "Open in Google Maps" inside the Camera Info inspector to view GPS
+     coordinates in your default web browser.
+
+5. CHILDREN'S PRIVACY
+   - Because the Application collects no data whatsoever, it is safe for users
+     of all ages, complying fully with COPPA (US) and relevant global standards.
+
+6. CONTACT
+   - Publisher: rmscube
+   - Inquiries regarding privacy compliance: legal@rmscube.com
+========================================================================
+

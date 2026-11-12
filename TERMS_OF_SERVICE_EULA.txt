@@ -1,0 +1,61 @@
+========================================================================
+   GALLERY CUBE — END USER LICENSE AGREEMENT & TERMS OF SERVICE
+   Publisher: rmscube
+   Version 1.0 (International Release)
+========================================================================
+
+PLEASE READ CAREFULLY BEFORE USING THIS SOFTWARE.
+
+1. LICENSE GRANT
+   rmscube grants you a personal, non-exclusive, worldwide, royalty-free
+   license to install, run, and use Gallery Cube ("the Software") on your
+   personal or commercial computers for viewing, editing, converting, and
+   organizing digital photos and videos.
+
+2. OWNERSHIP & INTELLECTUAL PROPERTY
+   - The Software, its design, interface, algorithms, and documentation are
+     the intellectual property of rmscube.
+   - All third-party open-source components remain the intellectual property
+     of their respective copyright holders, as documented in THIRD_PARTY_LICENSES.txt.
+   - You retain 100% full, unencumbered ownership of all media, photos, and
+     videos you view, edit, or export using the Software.
+
+3. RESTRICTIONS
+   You agree not to:
+   - Decompile, reverse engineer, or disassemble the Software, except to the
+     extent permitted by applicable law.
+   - Use the Software for any unlawful purpose under the laws of India or the
+     country in which you reside.
+
+4. EXPORT COMPLIANCE (INTERNATIONAL LAWS)
+   The Software complies with standard international civilian dual-use export
+   regulations and the United States Export Administration Regulations (EAR99).
+   You agree not to export or re-export the Software in violation of any applicable
+   international export sanctions or embargoes.
+
+5. "AS IS" WARRANTY DISCLAIMER
+   THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+   RMSCUBE DOES NOT WARRANT THAT THE FUNCTIONS CONTAINED IN THE SOFTWARE
+   WILL MEET YOUR REQUIREMENTS OR THAT THE OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL RMSCUBE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+   ON ANY THEORY OF LIABILITY, ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+7. GOVERNING LAW & JURISDICTION
+   - For users residing in India: These terms shall be governed by and construed
+     in accordance with the laws of India.
+   - For international users: Applicable conflict-of-law principles and international
+     treaties (including the Berne Convention for the Protection of Literary and
+     Artistic Works) shall apply.
+
+8. PUBLISHER INFORMATION
+   Entity: rmscube
+   Support & Inquiries: contact@rmscube.com
+========================================================================
+

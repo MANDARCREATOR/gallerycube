@@ -1,0 +1,40 @@
+# UTF-8
+#
+# Windows PE Executable Version Information for Gallery Cube
+# Publisher: rmscube
+#
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          '040904B0',
+          [
+            StringStruct('CompanyName', 'rmscube'),
+            StringStruct('FileDescription', 'Gallery Cube — Universal Media Studio'),
+            StringStruct('FileVersion', '1.0.0.0'),
+            StringStruct('InternalName', 'GalleryCube'),
+            StringStruct('LegalCopyright', 'Copyright (C) 2026 rmscube. All rights reserved.'),
+            StringStruct('LegalTrademarks', 'Gallery Cube is a trademark of rmscube.'),
+            StringStruct('OriginalFilename', 'GalleryCube.exe'),
+            StringStruct('ProductName', 'Gallery Cube'),
+            StringStruct('ProductVersion', '1.0.0.0'),
+            StringStruct('Comments', 'Universal Media Studio for Photos and Videos published by rmscube.')
+          ]
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
+

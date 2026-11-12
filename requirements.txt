@@ -1,0 +1,7 @@
+pillow>=11.1.0
+pillow-heif>=1.8.1
+customtkinter>=6.0.0
+numpy>=2.0.0
+opencv-python>=4.8.0
+windnd>=1.0.7
+tkintermapview>=1.32
